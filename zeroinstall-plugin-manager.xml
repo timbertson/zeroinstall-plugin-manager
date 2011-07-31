@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type='text/xsl' href='interface.xsl'?>
+<interface xmlns="http://zero-install.sourceforge.net/2004/injector/interface" uri="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager.xml">
+	<name>zeroinstall-plugin-manager</name>
+	<summary>user-specific plugin manager for zero-install applications</summary>
+	<publish xmlns="http://gfxmonk.net/dist/0install" mode="0tools"/>
+	<description>
+This program is intended to be used as a &lt;runner&gt; for another
+zero install feed, e.g:
+
+&lt;command name="run"&gt;
+	&lt;runner interface=""&gt;
+		&lt;arg&gt;http://example.com/your-feed.xml&lt;/arg&gt;
+	&lt;/runner&gt;
+&lt;/command&gt;
+&lt;command name="core" path="my-program-executable"/&gt;
+
+It manages a user-specific list of feed URIs ("plugins"), and
+launches the desired URL with those URIs as additional
+dependencies.
+
+For command-line options, run with --plugin-help
+	</description>
+	<homepage>http://github.com/gfxmonk/zeroinstall-plugin-manager</homepage>
+	<group main="zeroinstall_plugin_manager.py">
+		<requires interface="http://0install.net/2007/interfaces/ZeroInstall.xml">
+			<environment insert="" mode="prepend" name="PATH"/>
+		</requires>
+		<command name="run" path="zeroinstall_plugin_manager.py">
+			<runner interface="http://repo.roscidus.com/python/python"/>
+		</command>
+		<environment insert="" mode="prepend" name="PYTHONPATH"/>
+		<implementation id="sha1new=40c013a19e5163f87b95d0fdb98710cc8bc42b77" released="2011-07-31" version="0.1">
+			<manifest-digest sha256="434bab0831058ee63ef8bc74c4ab89ad5cdd9e15ec322edeae88ace678dd6b88"/>
+			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.1.tgz" size="2067"/>
+		</implementation>
+	</group>
+</interface>
