@@ -5,23 +5,78 @@
 	<summary>user-specific plugin manager for zero-install applications</summary>
 	<publish xmlns="http://gfxmonk.net/dist/0install" mode="0tools"/>
 	<description>
-This program is intended to be used as a &lt;runner&gt; for another
+# ZeroInstall Plugin Manager
+
+This program is intended to be used as a `&lt;runner&gt;` for another
 zero install feed, e.g:
 
-&lt;command name="run"&gt;
-	&lt;runner interface=""&gt;
-		&lt;arg&gt;http://example.com/your-feed.xml&lt;/arg&gt;
-	&lt;/runner&gt;
-&lt;/command&gt;
-&lt;command name="core" path="my-program-executable"/&gt;
+	&lt;command name="run"&gt;
+		&lt;runner interface="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager.xml"&gt;
+			&lt;arg&gt;http://example.com/your-feed.xml&lt;/arg&gt;
+		&lt;/runner&gt;
+	&lt;/command&gt;
+	&lt;command name="core" path="my-program-executable"/&gt;
 
 It manages a user-specific list of feed URIs ("plugins"), and
-launches the desired URL with those URIs as additional
-dependencies.
+launches the desired URL (this *must* be the first argument)
+with those URIs as additional dependencies.
 
-For command-line options, run with --plugin-help
+By default, zeroinstall-plugin-manager will launch your feed's
+`core` command while adding all current plugins as dependencies
+(it can't use `run`, as that would cause infinite recursion in
+the typical case).
+
+zeroinstall-plugin-manager will consume all options that start
+with "--plugin-". If you need to prevent this, it will stop at
+the first argument equal to "--".
+
+	Options to zeroinstall-plugin-manager are:
+		--plugin-add URI       Add a plugin by URI
+		--plugin-remove URI    Remove a plugin by URI
+		--plugin-list          List current plugins
+		--plugin-opt OPT       Pass OPT through to the 0launch
+		                       command (e.g '--gui')
+		--plugin-command CMD   Run CMD command instead of 'core'
+		                       (can be specified multiple times)
+		--plugin-help          You're reading it!
+
+If you don't like those options, feel free to simply depend upon
+this feed, then import `zeroinstall_plugin_manager.Config`
+yourself and have at it.
+
 	</description>
 	<homepage>http://github.com/gfxmonk/zeroinstall-plugin-manager</homepage>
+	<rich-description xmlns="http://gfxmonk.net/dist/0install">
+		<div xmlns="http://www.w3.org/1999/xhtml">
+			<h1 id="zeroinstall-plugin-manager">ZeroInstall Plugin Manager</h1>
+			<p>This program is intended to be used as a <code>&lt;runner&gt;</code> for another zero install feed, e.g:</p>
+			<pre>
+				<code>&lt;command name="run"&gt;
+    &lt;runner interface="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager.xml"&gt;
+        &lt;arg&gt;http://example.com/your-feed.xml&lt;/arg&gt;
+    &lt;/runner&gt;
+&lt;/command&gt;
+&lt;command name="core" path="my-program-executable"/&gt;
+</code>
+			</pre>
+			<p>It manages a user-specific list of feed URIs ("plugins"), and launches the desired URL (this <em>must</em> be the first argument) with those URIs as additional dependencies.</p>
+			<p>By default, zeroinstall-plugin-manager will launch your feed's <code>core</code> command while adding all current plugins as dependencies (it can't use <code>run</code>, as that would cause infinite recursion in the typical case).</p>
+			<p>zeroinstall-plugin-manager will consume all options that start with "--plugin-". If you need to prevent this, it will stop at the first argument equal to "--".</p>
+			<pre>
+				<code>Options to zeroinstall-plugin-manager are:
+    --plugin-add URI       Add a plugin by URI
+    --plugin-remove URI    Remove a plugin by URI
+    --plugin-list          List current plugins
+    --plugin-opt OPT       Pass OPT through to the 0launch
+                           command (e.g '--gui')
+    --plugin-command CMD   Run CMD command instead of 'core'
+                           (can be specified multiple times)
+    --plugin-help          You're reading it!
+</code>
+			</pre>
+			<p>If you don't like those options, feel free to simply depend upon this feed, then import <code>zeroinstall_plugin_manager.Config</code> yourself and have at it.</p>
+		</div>
+	</rich-description>
 	<group main="zeroinstall_plugin_manager.py">
 		<requires interface="http://0install.net/2007/interfaces/ZeroInstall.xml">
 			<environment insert="" mode="prepend" name="PATH"/>
