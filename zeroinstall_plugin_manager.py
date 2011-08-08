@@ -13,18 +13,31 @@ def main():
 	not_double_dash = lambda x: x != '--'
 	relevant_args = list(itertools.takewhile(not_double_dash, args))
 	passthru_args = list(itertools.dropwhile(not_double_dash, args))
+
 	def extract_args(flag, boolean=False):
-		result = False if boolean else []
-		while True:
-			try:
-				index = relevant_args.index(flag)
-			except ValueError:
-				return result
-			relevant_args.pop(index)
-			if boolean:
+		if boolean:
+			def find_and_remove_next_bool():
+				try:
+					index = relevant_args.index(flag)
+				except ValueError:
+					return None
+				relevant_args.pop(index)
 				return True
-			else:
-				result.append(relevant_args.pop(index))
+			return len(list(iter(find_and_remove_next_bool, None))) > 0
+
+		else:
+			def find_and_remove_next_value():
+				for index, arg in enumerate(relevant_args):
+					if arg == flag:
+						relevant_args.pop(index)
+						return relevant_args.pop(index)
+					elif arg.startswith(flag + '='):
+						relevant_args.pop(index)
+						return arg.split('=', 1)[1]
+				else:
+					return None
+			return list(iter(find_and_remove_next_value, None))
+
 	
 	if extract_args('--plugin-help', boolean=True):
 		print >> sys.stderr, """Options to zeroinstall-plugin-manager are:
@@ -35,6 +48,7 @@ def main():
 	                       command (e.g '--gui')
 	--plugin-command CMD   Run CMD command instead of '""" + Config.default_command + """'
 	                       (can be specified multiple times)
+	--plugin-exec-uri URI  Launch URI instead of the main feed
 	--plugin-help          You're reading it!"""
 		return 1
 
@@ -45,6 +59,7 @@ def main():
 	list(map(config.remove, extract_args('--plugin-remove')))
 	list(map(config.set_name, extract_args('--plugin-manager-name')))
 	list(map(config.set_command, extract_args('--plugin-command')))
+	list(map(config.set_exec_uri, extract_args('--plugin-exec-uri')))
 	launcher_args = extract_args('--plugin-opt')
 	def print_uris():
 		print "\n".join(sorted(config.uris))
@@ -60,12 +75,14 @@ def main():
 	unknown_args = list(arg for arg in relevant_args if arg.startswith('--plugin-'))
 	if unknown_args:
 		print >> sys.stderr, "Unknown plugin-manager arg: %s (use -- to ignore following options)" % (unknown_args,)
+		return False
 	config.launch_feed(launcher_args=launcher_args, program_args=relevant_args + passthru_args)
 
 class Config(object):
 	default_command = 'core'
 	def __init__(self, uri):
 		self.uri = uri
+		self.execute_uri = uri
 		self.feed_dirname = urllib.quote(self.uri, safe='').replace(os.path.sep, '_')
 		self.config_dir = os.path.join(BaseDirectory.xdg_data_home, 'zeroinstall-plugin-manager', self.feed_dirname)
 		self.config_path = os.path.join(self.config_dir, 'uri-list')
@@ -74,14 +91,19 @@ class Config(object):
 		self._uris = None
 		self._lines = None
 		self.modified = False
+	
+	def set_exec_uri(self, uri):
+		self.execute_uri = uri
+
+	def ensure_directory(self):
+		if not os.path.exists(self.config_dir):
+			os.makedirs(self.config_dir)
 
 	def get_config_file(self, mode='r'):
+		self.ensure_directory()
 		try:
 			return open(self.config_path, mode)
 		except IOError:
-			try:
-				os.makedirs(self.config_dir)
-			except OSError: pass
 			open(self.config_path, 'w').close()
 			return open(self.config_path, mode)
 
@@ -114,6 +136,7 @@ class Config(object):
 		os.execvp('0launch', ['0launch'] + launcher_args + [feed_path] + program_args)
 
 	def write_feed(self):
+		self.ensure_directory()
 		with open(self.feed_path, 'w') as output_feed:
 			username = getpass.getuser()
 			def requirement(uri):
@@ -136,7 +159,7 @@ class Config(object):
 					<implementation id="." version="1.0"/>
 				</group>
 			</interface>\n
-			'''.format(name=self.name, command=self.command, user=username, runner_uri=self.uri, dependencies=requirement_elems))
+			'''.format(name=self.name, command=self.command, user=username, runner_uri=self.execute_uri, dependencies=requirement_elems))
 		return self.feed_path
 
 	def save(self):
