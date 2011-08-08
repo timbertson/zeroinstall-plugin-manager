@@ -89,5 +89,9 @@ yourself and have at it.
 			<manifest-digest sha256="434bab0831058ee63ef8bc74c4ab89ad5cdd9e15ec322edeae88ace678dd6b88"/>
 			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.1.tgz" size="2067"/>
 		</implementation>
+		<implementation id="sha1new=fd6d9f0b223ea6a169477f0675ddc1e9bed5fc77" released="2011-08-08" version="0.1.1">
+			<manifest-digest sha256="691beac1a20766d808e74ebc4859ba63f69a69f4d66b73bdb71bcda4410d9412"/>
+			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.1.1.tgz" size="2227"/>
+		</implementation>
 	</group>
 </interface>
