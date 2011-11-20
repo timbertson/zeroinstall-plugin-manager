@@ -4,6 +4,7 @@ import sys, os
 import cgi
 import getpass
 import urllib
+import subprocess
 from xdg import BaseDirectory
 import itertools
 
@@ -39,24 +40,38 @@ def main():
 			return list(iter(find_and_remove_next_value, None))
 
 	
-	if extract_args('--plugin-help', boolean=True):
-		print >> sys.stderr, """Options to zeroinstall-plugin-manager are:
-	--plugin-add URI       Add a plugin by URI
-	--plugin-remove URI    Remove a plugin by URI
-	--plugin-list          List current plugins
-	--plugin-opt OPT       Pass OPT through to the 0launch
-	                       command (e.g '--gui')
-	--plugin-command CMD   Run CMD command instead of '""" + Config.default_command + """'
-	                       (can be specified multiple times)
-	--plugin-exec-uri URI  Launch URI instead of the main feed
-	--plugin-help          You're reading it!"""
-		return 1
+	store = Store()
+	if len(relevant_args) == 0:
+		known_uris = "\n".join(sorted(store.uris))
+		print >> sys.stderr, "Please specify a main feed URI.\nKnown URIs in %s:\n\n%s" % (store.base, known_uris)
+		return 0
+	if extract_args('--plugin-help', boolean=True) or relevant_args[0] in ("--help", "-h"):
+		print >> sys.stderr, """Usage: zeroinstall-plugin-manager FEED_URI [plugin-options] [--] [program-arguments]
+  program-args will be passed through to the called program.
+  plugin-options are:
 
-	assert len(relevant_args) > 0, "please specify a main feed URI"
+  --plugin-add URI       Add a plugin by URI
+  --plugin-remove URI    Remove a plugin by URI
+  --plugin-list          List current plugins
+  --plugin-edit          Edit plugins (via $EDITOR)
+  --plugin-reset         Remove all plugin config for this URI
+  --plugin-opt OPT       Pass OPT through to the 0launch
+                         command (e.g '--gui')
+  --plugin-command CMD   Run CMD command instead of '""" + Config.default_command + """'
+                         (can be specified multiple times)
+  --plugin-exec-uri URI  Launch URI instead of the main feed
+                         (i.e launch this uri with main URI's plugins)
+  --plugin-help          You're reading it!
+
+Call with no arguments to see a list of URIs where plugins have been used."""
+		return 1
 	feed_uri = relevant_args.pop(0)
-	config = Config(feed_uri)
+	assert "://" in feed_uri and not feed_uri.startswith("-"), "invalid URI: " + feed_uri
+	config = store[feed_uri]
 	list(map(config.add, extract_args('--plugin-add')))
 	list(map(config.remove, extract_args('--plugin-remove')))
+	if extract_args('--plugin-edit', boolean=True): config.edit()
+	if extract_args('--plugin-reset', boolean=True): config.erase()
 	list(map(config.set_name, extract_args('--plugin-manager-name')))
 	list(map(config.set_command, extract_args('--plugin-command')))
 	list(map(config.set_exec_uri, extract_args('--plugin-exec-uri')))
@@ -78,39 +93,66 @@ def main():
 		return False
 	config.launch_feed(launcher_args=launcher_args, program_args=relevant_args + passthru_args)
 
+class Store(object):
+	def __init__(self):
+		self.base = os.path.join(BaseDirectory.xdg_data_home, 'zeroinstall-plugin-manager')
+	
+	@property
+	def contents(self):
+		return os.listdir(self.base)
+	
+	@property
+	def uris(self):
+		return map(urllib.unquote, self.contents)
+
+	def dir_for(self, uri):
+		result = urllib.quote(uri, safe='')
+		assert os.path.sep not in result
+		return os.path.join(self.base, result)
+
+	def __getitem__(self, uri):
+		return Config(store=self, uri=uri)
+
 class Config(object):
 	default_command = 'core'
-	def __init__(self, uri):
+	def __init__(self, store, uri):
 		self.uri = uri
 		self.execute_uri = uri
-		self.feed_dirname = urllib.quote(self.uri, safe='').replace(os.path.sep, '_')
-		self.config_dir = os.path.join(BaseDirectory.xdg_data_home, 'zeroinstall-plugin-manager', self.feed_dirname)
-		self.config_path = os.path.join(self.config_dir, 'uri-list')
+		self.config_dir = store.dir_for(uri)
+		print repr(self.config_dir)
+		self.uri_list_file = os.path.join(self.config_dir, 'uri-list')
 		self.name = uri.rstrip('/').rsplit('/',1)[-1]
 		self.command = self.default_command
 		self._uris = None
 		self._lines = None
 		self.modified = False
-	
+
 	def set_exec_uri(self, uri):
 		self.execute_uri = uri
 
+	@property
+	def directory_exists(self):
+		return os.path.exists(self.config_dir)
+
 	def ensure_directory(self):
-		if not os.path.exists(self.config_dir):
+		if not self.directory_exists:
 			os.makedirs(self.config_dir)
 
-	def get_config_file(self, mode='r'):
+	def open_uri_list(self, mode='r'):
 		self.ensure_directory()
 		try:
-			return open(self.config_path, mode)
+			return open(self.uri_list_file, mode)
 		except IOError:
-			open(self.config_path, 'w').close()
-			return open(self.config_path, mode)
+			open(self.uri_list_file, 'w').close()
+			return open(self.uri_list_file, mode)
+	
+	def ensure_uri_list(self):
+		self.open_uri_list().close()
 
 	@property
 	def lines(self):
 		if self._lines is None:
-			with self.get_config_file() as f:
+			with self.open_uri_list() as f:
 				self._lines = list(line.strip() for line in f.readlines())
 		return self._lines
 
@@ -168,7 +210,7 @@ class Config(object):
 		existing_lines = set(self.lines)
 
 		comments = existing_lines.difference(existing_uris)
-		with self.get_config_file('w') as out:
+		with self.open_uri_list('w') as out:
 			print >> out, "\n".join(uris)
 			if comments:
 				print >> out, "\n".join(comments)
@@ -182,6 +224,21 @@ class Config(object):
 		try:
 			self.uris.remove(uri)
 		except KeyError: pass
+		self.modified = True
+	
+	def edit(self):
+		editor = os.environ.get('EDITOR', 'vi')
+		self.ensure_uri_list()
+		print >> sys.stderr, "launching editor... for %s" % (self.uri_list_file,)
+		edit = subprocess.Popen([editor, self.uri_list_file])
+		edit.wait()
+		print
+		self.modified = True
+	
+	def erase(self):
+		if self.directory_exists:
+			shutil.rmtree(self.config_dir)
+		print "removed all plugin settings for %s" % (self.uri,)
 		self.modified = True
 
 if __name__ == '__main__':
