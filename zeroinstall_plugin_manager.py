@@ -119,7 +119,6 @@ class Config(object):
 		self.uri = uri
 		self.execute_uri = uri
 		self.config_dir = store.dir_for(uri)
-		print repr(self.config_dir)
 		self.uri_list_file = os.path.join(self.config_dir, 'uri-list')
 		self.name = uri.rstrip('/').rsplit('/',1)[-1]
 		self.command = self.default_command
