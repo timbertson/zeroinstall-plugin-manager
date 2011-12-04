@@ -82,7 +82,9 @@ yourself and have at it.
 			<environment insert="" mode="prepend" name="PATH"/>
 		</requires>
 		<command name="run" path="zeroinstall_plugin_manager.py">
-			<runner interface="http://repo.roscidus.com/python/python"/>
+			<runner interface="http://repo.roscidus.com/python/python">
+				<version before="3.0"/>
+			</runner>
 		</command>
 		<environment insert="" mode="prepend" name="PYTHONPATH"/>
 		<implementation id="sha1new=40c013a19e5163f87b95d0fdb98710cc8bc42b77" released="2011-07-31" version="0.1">
