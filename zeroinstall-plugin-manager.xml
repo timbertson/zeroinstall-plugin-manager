@@ -103,5 +103,9 @@ yourself and have at it.
 			<manifest-digest sha256="06a55534f8da34a3abbaf4a673f1ff3fcdd36430afc21336d04f8b5f42013b6f"/>
 			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.1.3.tgz" size="2758"/>
 		</implementation>
+		<implementation id="sha1new=680e1199f97f269fdb537162a96c571a76914d6e" released="2012-01-28" version="0.1.4">
+			<manifest-digest sha256="4a794336d3ac53854e3f03477378a0168c02e18978e5084db5eef82001e3b839"/>
+			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.1.4.tgz" size="2865"/>
+		</implementation>
 	</group>
 </interface>
