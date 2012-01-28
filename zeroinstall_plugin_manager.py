@@ -50,6 +50,8 @@ def main():
   program-args will be passed through to the called program.
   plugin-options are:
 
+  --plugin-with URI      Run with URI (for just this session)
+  --plugin-without URI   Run without URI (for just this session)
   --plugin-add URI       Add a plugin by URI
   --plugin-remove URI    Remove a plugin by URI
   --plugin-list          List current plugins
@@ -70,6 +72,10 @@ Call with no arguments to see a list of URIs where plugins have been used."""
 	config = store[feed_uri]
 	list(map(config.add, extract_args('--plugin-add')))
 	list(map(config.remove, extract_args('--plugin-remove')))
+
+	list(map(config.session_add, extract_args('--plugin-with')))
+	list(map(config.session_remove, extract_args('--plugin-without')))
+
 	if extract_args('--plugin-edit', boolean=True): config.edit()
 	if extract_args('--plugin-reset', boolean=True): config.erase()
 	list(map(config.set_name, extract_args('--plugin-manager-name')))
@@ -122,6 +128,8 @@ class Config(object):
 		self.uri_list_file = os.path.join(self.config_dir, 'uri-list')
 		self.name = uri.rstrip('/').rsplit('/',1)[-1]
 		self.command = self.default_command
+		self.session_additions = set()
+		self.session_removals = set()
 		self._uris = None
 		self._lines = None
 		self.modified = False
@@ -178,12 +186,15 @@ class Config(object):
 
 	def write_feed(self):
 		self.ensure_directory()
+		uris = self.uris
+		uris = uris.union(self.session_additions)
+		uris = uris.difference(self.session_removals)
 		with open(self.feed_path, 'w') as output_feed:
 			username = getpass.getuser()
 			def requirement(uri):
 				return '<requires interface=\"%s\"/>' % (cgi.escape(uri),)
 
-			requirement_elems = "\n".join(map(requirement, self.uris))
+			requirement_elems = "\n".join(map(requirement, uris))
 			output_feed.write('''<?xml version="1.0" ?>
 			<?xml-stylesheet type='text/xsl' href='interface.xsl'?>
 			<interface xmlns="http://zero-install.sourceforge.net/2004/injector/interface">
@@ -224,6 +235,12 @@ class Config(object):
 			self.uris.remove(uri)
 		except KeyError: pass
 		self.modified = True
+	
+	def session_add(self, uri):
+		self.session_additions.add(uri)
+
+	def session_remove(self, uri):
+		self.session_removals.add(uri)
 	
 	def edit(self):
 		editor = os.environ.get('EDITOR', 'vi')
