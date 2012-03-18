@@ -130,6 +130,9 @@ yourself and have at it.
 			<arg>--plugin-use-system-zeroinstall</arg>
 		</command>
 		<environment insert="" mode="prepend" name="PYTHONPATH"/>
-		<implementation id="." version="0.2-pre"/>
+		<implementation id="sha1new=7fcbb5041eac031742e385d04d4b2a9f3f04aa35" released="2012-03-18" version="0.2">
+			<manifest-digest sha256="8c92a76e344b28e611acadad666778356eff266f94dbb2ae011c350b2b9301c9"/>
+			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.2.tgz" size="3338"/>
+		</implementation>
 	</group>
 </interface>
