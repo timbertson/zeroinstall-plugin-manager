@@ -108,4 +108,28 @@ yourself and have at it.
 			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.1.4.tgz" size="2865"/>
 		</implementation>
 	</group>
+	<group main="zeroinstall_plugin_manager.py">
+		<command name="run" path="zeroinstall_plugin_manager.py">
+			<runner interface="http://repo.roscidus.com/python/python"/>
+		</command>
+		<command name="test" path="zeroinstall_plugin_manager.py">
+			<runner interface="http://repo.roscidus.com/python/python"/>
+		</command>
+		<command name="run-inline" path="zeroinstall_plugin_manager.py">
+			<!--
+				defines all dependencies upfront. This would be ideal, except it needlessly prevents
+				the plugin manager from being used as a <runner> for a feed which uses python 3, for example
+				(since 0install itself relies on py23
+			-->
+			<runner interface="http://repo.roscidus.com/python/python">
+				<version before="3.0"/>
+			</runner>
+			<requires interface="http://0install.net/2007/interfaces/ZeroInstall.xml">
+				<environment insert="" mode="prepend" name="PATH"/>
+			</requires>
+			<arg>--plugin-use-system-zeroinstall</arg>
+		</command>
+		<environment insert="" mode="prepend" name="PYTHONPATH"/>
+		<implementation id="." version="0.2-pre"/>
+	</group>
 </interface>

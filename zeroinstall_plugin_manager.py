@@ -1,12 +1,22 @@
 #!/usr/bin/env python
+from __future__ import print_function, unicode_literals
 
 import sys, os
 import cgi
 import getpass
-import urllib
 import subprocess
-from xdg import BaseDirectory
+import shutil
+#from xdg import BaseDirectory # not available in py3; we don't need much of it. See `_get_config_dir`
 import itertools
+
+if sys.version_info > (3,):
+	import urllib.parse
+	url_unquote = urllib.parse.unquote
+	url_quote = urllib.parse.quote
+else:
+	import urllib
+	url_unquote = urllib.unquote
+	url_quote = urllib.quote
 
 def main():
 	args = sys.argv[1:]
@@ -41,12 +51,13 @@ def main():
 
 	
 	store = Store()
+	do_zeroinstall_bootstrap = not extract_args('--plugin-use-system-zeroinstall', boolean=True)
 	if len(relevant_args) == 0:
 		known_uris = "\n".join(sorted(store.uris))
-		print >> sys.stderr, "Please specify a main feed URI.\nKnown URIs in %s:\n\n%s" % (store.base, known_uris)
+		print("Please specify a main feed URI.\nKnown URIs in %s:\n\n%s" % (store.base, known_uris), file=sys.stderr)
 		return 0
 	if extract_args('--plugin-help', boolean=True) or relevant_args[0] in ("--help", "-h"):
-		print >> sys.stderr, """Usage: zeroinstall-plugin-manager FEED_URI [plugin-options] [--] [program-arguments]
+		print("""Usage: zeroinstall-plugin-manager FEED_URI [plugin-options] [--] [program-arguments]
   program-args will be passed through to the called program.
   plugin-options are:
 
@@ -65,7 +76,7 @@ def main():
                          (i.e launch this uri with main URI's plugins)
   --plugin-help          You're reading it!
 
-Call with no arguments to see a list of URIs where plugins have been used."""
+Call with no arguments to see a list of URIs where plugins have been used.""", file=sys.stderr)
 		return 1
 	feed_uri = relevant_args.pop(0)
 	assert "://" in feed_uri and not feed_uri.startswith("-"), "invalid URI: " + feed_uri
@@ -76,18 +87,21 @@ Call with no arguments to see a list of URIs where plugins have been used."""
 	list(map(config.session_add, extract_args('--plugin-with')))
 	list(map(config.session_remove, extract_args('--plugin-without')))
 
-	if extract_args('--plugin-edit', boolean=True): config.edit()
-	if extract_args('--plugin-reset', boolean=True): config.erase()
+	if extract_args('--plugin-edit', boolean=True):
+		config.edit()
+	if extract_args('--plugin-reset', boolean=True):
+		config.erase()
+		return 0
 	list(map(config.set_name, extract_args('--plugin-manager-name')))
 	list(map(config.set_command, extract_args('--plugin-command')))
 	list(map(config.set_exec_uri, extract_args('--plugin-exec-uri')))
 	launcher_args = extract_args('--plugin-opt')
 	def print_uris():
-		print "\n".join(sorted(config.uris))
+		print("\n".join(sorted(config.uris)))
 
 	if(config.modified):
 		config.save()
-		print >> sys.stderr, "Updated plugin list for %s:" % (config.uri,)
+		print("Updated plugin list for %s:" % (config.uri,), file=sys.stderr)
 		print_uris()
 		return
 	if extract_args('--plugin-list', boolean=True):
@@ -95,13 +109,24 @@ Call with no arguments to see a list of URIs where plugins have been used."""
 		return
 	unknown_args = list(arg for arg in relevant_args if arg.startswith('--plugin-'))
 	if unknown_args:
-		print >> sys.stderr, "Unknown plugin-manager arg: %s (use -- to ignore following options)" % (unknown_args,)
+		print("Unknown plugin-manager arg: %s (use -- to ignore following options)" % (unknown_args,), file=sys.stderr)
 		return False
-	config.launch_feed(launcher_args=launcher_args, program_args=relevant_args + passthru_args)
+	config.launch_feed(launcher_args=launcher_args, program_args=relevant_args + passthru_args, bootstrap = do_zeroinstall_bootstrap)
+
+def _get_config_dir(name):
+	"""if we already have a dir in $SDG_DATA_HOME, use that for backwards compatibility.
+	Otherwise, use the config dir"""
+	home = os.path.expanduser('~')
+	xdg_data_home = os.environ.get('XDG_DATA_HOME') or os.path.join(home, '.local', 'share')
+	data_loc = os.path.join(xdg_data_home, name)
+	if os.path.exists(data_loc): return data_loc
+
+	xdg_config_home = os.environ.get('XDG_CONFIG_HOME') or os.path.join(home, '.config')
+	return os.path.join(xdg_config_home, name)
 
 class Store(object):
 	def __init__(self):
-		self.base = os.path.join(BaseDirectory.xdg_data_home, 'zeroinstall-plugin-manager')
+		self.base = os.path.join(_get_config_dir('zeroinstall-plugin-manager'))
 	
 	@property
 	def contents(self):
@@ -109,10 +134,10 @@ class Store(object):
 	
 	@property
 	def uris(self):
-		return map(urllib.unquote, self.contents)
+		return map(url_unquote, self.contents)
 
 	def dir_for(self, uri):
-		result = urllib.quote(uri, safe='')
+		result = url_quote(uri, safe='')
 		assert os.path.sep not in result
 		return os.path.join(self.base, result)
 
@@ -180,9 +205,13 @@ class Config(object):
 	def set_command(self, cmd):
 		self.command = cmd
 
-	def launch_feed(self, program_args, launcher_args=[]):
+	def launch_feed(self, program_args, launcher_args=[], bootstrap=True):
 		feed_path = self.write_feed()
-		os.execvp('0launch', ['0launch'] + launcher_args + [feed_path] + program_args)
+		base_args = ['0launch']
+		if bootstrap:
+			base_args = base_args + ['-c', 'http://0install.net/2007/interfaces/ZeroInstall.xml']
+		argv = base_args + ['-c'] + launcher_args + [feed_path] + program_args
+		os.execvp('0launch', argv)
 
 	def write_feed(self):
 		self.ensure_directory()
@@ -221,9 +250,9 @@ class Config(object):
 
 		comments = existing_lines.difference(existing_uris)
 		with self.open_uri_list('w') as out:
-			print >> out, "\n".join(uris)
+			print("\n".join(uris), file=out)
 			if comments:
-				print >> out, "\n".join(comments)
+				print("\n".join(comments), file=out)
 		self.modified = False
 
 	def add(self, uri):
@@ -245,16 +274,16 @@ class Config(object):
 	def edit(self):
 		editor = os.environ.get('EDITOR', 'vi')
 		self.ensure_uri_list()
-		print >> sys.stderr, "launching editor... for %s" % (self.uri_list_file,)
+		print("launching editor... for %s" % (self.uri_list_file,), file=sys.stderr)
 		edit = subprocess.Popen([editor, self.uri_list_file])
 		edit.wait()
-		print
+		print()
 		self.modified = True
 	
 	def erase(self):
 		if self.directory_exists:
 			shutil.rmtree(self.config_dir)
-		print "removed all plugin settings for %s" % (self.uri,)
+		print("removed all plugin settings for %s" % (self.uri,))
 		self.modified = True
 
 if __name__ == '__main__':
