@@ -137,7 +137,10 @@ class Store(object):
 		return map(url_unquote, self.contents)
 
 	def dir_for(self, uri):
-		result = url_quote(uri, safe='')
+		try:
+			result = url_quote(uri, safe='')
+		except TypeError as e:
+			raise ValueError("Invalid uri: %r\n(Original error: %s)" % (uri, e))
 		assert os.path.sep not in result
 		return os.path.join(self.base, result)
 
