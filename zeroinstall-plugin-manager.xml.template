@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type='text/xsl' href='interface.xsl'?>
-<interface xmlns="http://zero-install.sourceforge.net/2004/injector/interface" uri="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager.xml">
+<interface xmlns="http://zero-install.sourceforge.net/2004/injector/interface">
 	<name>zeroinstall-plugin-manager</name>
 	<summary>user-specific plugin manager for zero-install applications</summary>
 	<publish xmlns="http://gfxmonk.net/dist/0install" mode="0tools"/>
+	<feed-for interface="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager.xml"/>
 	<description>
 # ZeroInstall Plugin Manager
 
@@ -50,20 +51,16 @@ yourself and have at it.
 		<div xmlns="http://www.w3.org/1999/xhtml">
 			<h1 id="zeroinstall-plugin-manager">ZeroInstall Plugin Manager</h1>
 			<p>This program is intended to be used as a <code>&lt;runner&gt;</code> for another zero install feed, e.g:</p>
-			<pre>
-				<code>&lt;command name="run"&gt;
+			<pre><code>&lt;command name="run"&gt;
     &lt;runner interface="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager.xml"&gt;
         &lt;arg&gt;http://example.com/your-feed.xml&lt;/arg&gt;
     &lt;/runner&gt;
 &lt;/command&gt;
-&lt;command name="core" path="my-program-executable"/&gt;
-</code>
-			</pre>
+&lt;command name="core" path="my-program-executable"/&gt;</code></pre>
 			<p>It manages a user-specific list of feed URIs ("plugins"), and launches the desired URL (this <em>must</em> be the first argument) with those URIs as additional dependencies.</p>
 			<p>By default, zeroinstall-plugin-manager will launch your feed's <code>core</code> command while adding all current plugins as dependencies (it can't use <code>run</code>, as that would cause infinite recursion in the typical case).</p>
 			<p>zeroinstall-plugin-manager will consume all options that start with "--plugin-". If you need to prevent this, it will stop at the first argument equal to "--".</p>
-			<pre>
-				<code>Options to zeroinstall-plugin-manager are:
+			<pre><code>Options to zeroinstall-plugin-manager are:
     --plugin-add URI       Add a plugin by URI
     --plugin-remove URI    Remove a plugin by URI
     --plugin-list          List current plugins
@@ -71,72 +68,24 @@ yourself and have at it.
                            command (e.g '--gui')
     --plugin-command CMD   Run CMD command instead of 'core'
                            (can be specified multiple times)
-    --plugin-help          You're reading it!
-</code>
-			</pre>
+    --plugin-help          You're reading it!</code></pre>
 			<p>If you don't like those options, feel free to simply depend upon this feed, then import <code>zeroinstall_plugin_manager.Config</code> yourself and have at it.</p>
 		</div>
 	</rich-description>
 	<group main="zeroinstall_plugin_manager.py">
-		<requires interface="http://0install.net/2007/interfaces/ZeroInstall.xml">
-			<environment insert="" mode="prepend" name="PATH"/>
-		</requires>
-		<command name="run" path="zeroinstall_plugin_manager.py">
-			<runner interface="http://repo.roscidus.com/python/python">
-				<version before="3.0"/>
-			</runner>
-		</command>
-		<environment insert="" mode="prepend" name="PYTHONPATH"/>
-		<implementation id="sha1new=40c013a19e5163f87b95d0fdb98710cc8bc42b77" released="2011-07-31" version="0.1">
-			<manifest-digest sha256="434bab0831058ee63ef8bc74c4ab89ad5cdd9e15ec322edeae88ace678dd6b88"/>
-			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.1.tgz" size="2067"/>
-		</implementation>
-		<implementation id="sha1new=fd6d9f0b223ea6a169477f0675ddc1e9bed5fc77" released="2011-08-08" version="0.1.1">
-			<manifest-digest sha256="691beac1a20766d808e74ebc4859ba63f69a69f4d66b73bdb71bcda4410d9412"/>
-			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.1.1.tgz" size="2227"/>
-		</implementation>
-		<implementation id="sha1new=18978711edee6b34ee4095a6d9b859ffe092e502" released="2011-11-20" version="0.1.2">
-			<manifest-digest sha256="080aa537c2b6674230f3df3c8a47261d0abe8a96dc773b08c1f9194d4a8f477a"/>
-			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.1.2.tgz" size="2766"/>
-		</implementation>
-		<implementation id="sha1new=b97f17ab16b700119819fda75ca9c4ab02e44f6a" released="2011-12-04" version="0.1.3">
-			<manifest-digest sha256="06a55534f8da34a3abbaf4a673f1ff3fcdd36430afc21336d04f8b5f42013b6f"/>
-			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.1.3.tgz" size="2758"/>
-		</implementation>
-		<implementation id="sha1new=680e1199f97f269fdb537162a96c571a76914d6e" released="2012-01-28" version="0.1.4">
-			<manifest-digest sha256="4a794336d3ac53854e3f03477378a0168c02e18978e5084db5eef82001e3b839"/>
-			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.1.4.tgz" size="2865"/>
-		</implementation>
-	</group>
-	<group main="zeroinstall_plugin_manager.py">
 		<command name="run" path="zeroinstall_plugin_manager.py">
 			<runner interface="http://repo.roscidus.com/python/python"/>
+			<requires interface="http://0install.net/2007/interfaces/ZeroInstall.xml">
+				<environment insert="" mode="prepend" name="PATH"/>
+			</requires>
 		</command>
 		<command name="test" path="zeroinstall_plugin_manager.py">
 			<runner interface="http://repo.roscidus.com/python/python"/>
 		</command>
-		<command name="run-inline" path="zeroinstall_plugin_manager.py">
-			<!--
-				defines all dependencies upfront. This would be ideal, except it needlessly prevents
-				the plugin manager from being used as a <runner> for a feed which uses python 3, for example
-				(since 0install itself relies on py23
-			-->
-			<runner interface="http://repo.roscidus.com/python/python">
-				<version before="3.0"/>
-			</runner>
-			<requires interface="http://0install.net/2007/interfaces/ZeroInstall.xml">
-				<environment insert="" mode="prepend" name="PATH"/>
-			</requires>
-			<arg>--plugin-use-system-zeroinstall</arg>
-		</command>
 		<environment insert="" mode="prepend" name="PYTHONPATH"/>
-		<implementation id="sha1new=7fcbb5041eac031742e385d04d4b2a9f3f04aa35" released="2012-03-18" version="0.2">
-			<manifest-digest sha256="8c92a76e344b28e611acadad666778356eff266f94dbb2ae011c350b2b9301c9"/>
-			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.2.tgz" size="3338"/>
-		</implementation>
-		<implementation id="sha1new=0539423d5e2b84d21ad00da732f9fef5bb2b0ad6" released="2012-04-26" version="0.2.1">
-			<manifest-digest sha256="1e73453a2e53ab9af2b4abee09abd8bf03c9c32de37c954aff85e1673ef442ce"/>
-			<archive href="http://gfxmonk.net/dist/0install/zeroinstall-plugin-manager/zeroinstall-plugin-manager-0.2.1.tgz" size="3389"/>
+		<implementation version="{version}">
+			<manifest-digest/>
+			<archive href="{archive}"/>
 		</implementation>
 	</group>
 </interface>

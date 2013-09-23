@@ -51,7 +51,10 @@ def main():
 
 	
 	store = Store()
-	do_zeroinstall_bootstrap = not extract_args('--plugin-use-system-zeroinstall', boolean=True)
+
+	if extract_args('--plugin-use-system-zeroinstall', boolean=True):
+		print("WARN: --plugin-use-system-zeroinstall is deprecated", file=sys.stderr)
+
 	if len(relevant_args) == 0:
 		known_uris = "\n".join(sorted(store.uris))
 		print("Please specify a main feed URI.\nKnown URIs in %s:\n\n%s" % (store.base, known_uris), file=sys.stderr)
@@ -111,7 +114,7 @@ Call with no arguments to see a list of URIs where plugins have been used.""", f
 	if unknown_args:
 		print("Unknown plugin-manager arg: %s (use -- to ignore following options)" % (unknown_args,), file=sys.stderr)
 		return False
-	config.launch_feed(launcher_args=launcher_args, program_args=relevant_args + passthru_args, bootstrap = do_zeroinstall_bootstrap)
+	config.launch_feed(launcher_args=launcher_args, program_args=relevant_args + passthru_args, bootstrap = False)
 
 def _get_config_dir(name):
 	"""if we already have a dir in $XDG_DATA_HOME, use that for backwards compatibility.
