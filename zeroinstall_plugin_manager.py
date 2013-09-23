@@ -68,7 +68,7 @@ def main():
   --plugin-list          List current plugins
   --plugin-edit          Edit plugins (via $EDITOR)
   --plugin-reset         Remove all plugin config for this URI
-  --plugin-opt OPT       Pass OPT through to the 0launch
+  --plugin-opt OPT       Pass OPT through to the 0install
                          command (e.g '--gui')
   --plugin-command CMD   Run CMD command instead of '""" + Config.default_command + """'
                          (can be specified multiple times)
@@ -114,7 +114,7 @@ Call with no arguments to see a list of URIs where plugins have been used.""", f
 	config.launch_feed(launcher_args=launcher_args, program_args=relevant_args + passthru_args, bootstrap = do_zeroinstall_bootstrap)
 
 def _get_config_dir(name):
-	"""if we already have a dir in $SDG_DATA_HOME, use that for backwards compatibility.
+	"""if we already have a dir in $XDG_DATA_HOME, use that for backwards compatibility.
 	Otherwise, use the config dir"""
 	home = os.path.expanduser('~')
 	xdg_data_home = os.environ.get('XDG_DATA_HOME') or os.path.join(home, '.local', 'share')
@@ -210,11 +210,11 @@ class Config(object):
 
 	def launch_feed(self, program_args, launcher_args=[], bootstrap=True):
 		feed_path = self.write_feed()
-		base_args = ['0launch']
+		base_args = ['0install', 'run']
 		if bootstrap:
 			base_args = base_args + ['-c', 'http://0install.net/2007/interfaces/ZeroInstall.xml']
 		argv = base_args + ['-c'] + launcher_args + [feed_path] + program_args
-		os.execvp('0launch', argv)
+		os.execvp('0install', argv)
 
 	def write_feed(self):
 		self.ensure_directory()
