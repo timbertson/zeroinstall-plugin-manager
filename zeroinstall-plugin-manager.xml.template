@@ -75,8 +75,8 @@ yourself and have at it.
 	<group main="zeroinstall_plugin_manager.py">
 		<command name="run" path="zeroinstall_plugin_manager.py">
 			<runner interface="http://repo.roscidus.com/python/python"/>
-			<requires interface="http://0install.net/2007/interfaces/ZeroInstall.xml">
-				<environment insert="" mode="prepend" name="PATH"/>
+			<requires interface="http://0install.net/tools/0install.xml">
+				<environment insert="" mode="append" name="PATH"/>
 			</requires>
 		</command>
 		<command name="test" path="zeroinstall_plugin_manager.py">

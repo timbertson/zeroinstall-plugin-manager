@@ -215,7 +215,7 @@ class Config(object):
 		feed_path = self.write_feed()
 		base_args = ['0install', 'run']
 		if bootstrap:
-			base_args = base_args + ['-c', 'http://0install.net/2007/interfaces/ZeroInstall.xml']
+			base_args = base_args + ['-c', 'http://0install.net/tools/0install.xml']
 		argv = base_args + ['-c'] + launcher_args + [feed_path] + program_args
 		os.execvp('0install', argv)
 
