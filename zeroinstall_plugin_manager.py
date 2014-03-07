@@ -213,11 +213,12 @@ class Config(object):
 
 	def launch_feed(self, program_args, launcher_args=[], bootstrap=True):
 		feed_path = self.write_feed()
-		base_args = ['0install', 'run']
+		exe = os.environ.get('ZI_BIN', '0install')
+		base_args = [exe, 'run']
 		if bootstrap:
-			base_args = base_args + ['-c', 'http://0install.net/tools/0install.xml']
+			base_args = base_args + ['-c', 'http://0install.net/2007/interfaces/ZeroInstall.xml']
 		argv = base_args + ['-c'] + launcher_args + [feed_path] + program_args
-		os.execvp('0install', argv)
+		os.execvp(exe, argv)
 
 	def write_feed(self):
 		self.ensure_directory()
