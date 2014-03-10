@@ -228,7 +228,7 @@ class Config(object):
 		with open(self.feed_path, 'w') as output_feed:
 			username = getpass.getuser()
 			def requirement(uri):
-				return '<requires interface=\"%s\"/>' % (cgi.escape(uri),)
+				return '<requires interface=\"%s\" importance="recommended"/>' % (cgi.escape(uri),)
 
 			requirement_elems = "\n".join(map(requirement, uris))
 			output_feed.write('''<?xml version="1.0" ?>

@@ -77,7 +77,7 @@ yourself and have at it.
 			<runner interface="http://repo.roscidus.com/python/python"/>
 			<requires interface="http://0install.net/2007/interfaces/ZeroInstall.xml">
 				<environment insert="" mode="prepend" name="PYTHONPATH"/>
-				<executable-in-var name="ZI_BIN" command="0install"/>
+				<executable-in-var command="0install" name="ZI_BIN"/>
 			</requires>
 		</command>
 		<command name="test" path="zeroinstall_plugin_manager.py">
