@@ -62,6 +62,8 @@ def main():
 	if extract_args('--plugin-help', boolean=True) or relevant_args[0] in ("--help", "-h"):
 		print("""Usage: zeroinstall-plugin-manager FEED_URI [plugin-options] [--] [program-arguments]
   program-args will be passed through to the called program.
+  To specify a particular command of a plugin, append #COMMAND to a URI.
+
   plugin-options are:
 
   --plugin-with URI      Run with URI (for just this session)
@@ -224,11 +226,24 @@ class Config(object):
 		self.ensure_directory()
 		uris = self.uris
 		uris = uris.union(self.session_additions)
+		for to_remove in self.session_removals.difference(uris):
+			print("Warn: URI not present to remove: %s" % (to_remove,))
 		uris = uris.difference(self.session_removals)
 		with open(self.feed_path, 'w') as output_feed:
 			username = getpass.getuser()
 			def requirement(uri):
-				return '<requires interface=\"%s\" importance="recommended"/>' % (cgi.escape(uri),)
+				command = None
+				if '#' in uri:
+					uri, command = uri.split('#', 1)
+				tag = '<requires interface="'
+				tag += cgi.escape(uri)
+				tag += '" importance="recommended"'
+				if command is not None:
+					tag += ' command="'
+					tag += cgi.escape(command)
+					tag += '"'
+				tag += '/>'
+				return tag
 
 			requirement_elems = "\n".join(map(requirement, uris))
 			output_feed.write('''<?xml version="1.0" ?>
