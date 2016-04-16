@@ -1,5 +1,7 @@
 # ZeroInstall Plugin Manager
 
+<img src="http://gfxmonk.net/dist/status/project/zeroinstall-plugin-manager.png">
+
 This program is intended to be used as a `<runner>` for another
 zero install feed, e.g:
 
